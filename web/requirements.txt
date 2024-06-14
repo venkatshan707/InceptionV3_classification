@@ -1,0 +1,27 @@
+# Flask - a popular web framework for Python
+flask
+
+# Flask-RESTful - an extension for Flask that adds support for quickly building REST APIs
+flask-restful
+
+# PyMongo - the official Python driver for MongoDB
+pymongo
+
+# Bcrypt - a library for hashing passwords securely
+bcrypt
+
+# NumPy - a library for scientific computing and working with arrays
+numpy
+
+# TensorFlow - a library for machine learning and deep learning
+tensorflow
+
+# Requests - a library for making HTTP requests(fetching images from url)
+requests
+
+# Keras - a high-level neural networks API, running on top of TensorFlow
+keras
+
+# Pillow - a library for processing images. It prepare images for model. 
+#like reshaping input array in such a way that model accepts and do lot more
+pillow

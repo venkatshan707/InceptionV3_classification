@@ -1,0 +1,10 @@
+version : '3.11'
+services : #we have defined two services. web and db. Web file will build using Docker file in the web directory and db service will build on Docker file in the DB directory.
+  wed:
+     build: ./web
+     ports:
+      -5000:5000 # web service expose to this port number
+    depends_on :
+      -db # web service depends(or needs) on db service
+  db:
+  build: ./db

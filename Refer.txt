@@ -1,0 +1,6 @@
+# create an empty folder
+mkdir foldername
+
+
+#create a new text file named "example.txt", you would use the following command:
+type nul > example.txt
