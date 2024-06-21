@@ -56,65 +56,76 @@ class Register (Resource):
    def post (self):
 
     #we first get the posted data
-
     posted_data =request.get_json()
 
     #Get user name and password
-
     username =posted_data["username"] 
     password =posted_data["password"]
 
     #Check if user already exist
-
     if user_exists(username):
-
      return jsonify ({
-
         "status":301, "message": "Invalid username, user already exist" })
 
     #if user is new hash the password
     hashed_pw= bcrypt.hashpw(password.encode('utf8'), bcrypt.gensalt())
 
     #After password hashed we will store the password in database
-
     users.insert_one({
-
     "Username":username,
-
     "Password": hashed_pw,
-
-    "Tokens":4
-
-    })
+    "Tokens":4    })
 
     #Resturn Sucess
-
-    ret_json={
-      
+    ret_json={      
     "status":200,
-
     "message": "You have successfully signed up for the API "
-    }
-
-    
+    }    
 
     return jsonify (ret_json)
 
 api.add_resource(Register, '/register')
 
-class Classify(Resource):
+def verify_pw(username, password):
+   if not user_exists(username):
+      return False
+   hashed_pw= users.find({
+       "Username": username
+    })[0]["password"]
+   
+   if bcrypt.hashpw(password.encode('utf8') ,hashpw)==hashed_pw:
+      return True
+   else:
+      return False
 
+def verify_credentials(username, password):
+   if not user_exists(username):
+      return generate_return_dictionary(301, "Invalid Username"), True
+   correct_pw=verify_pw(username, password)
+
+   if not correct_pw:
+      return generate_return_dictionary(301, "Incorrect password"), True
+   
+   return None, False
+
+
+
+def generate_return_dictionary(status, msg):
+   ret_json= {
+      "status": status,
+      "msg": msg
+   }
+   return ret_json
+
+class Classify(Resource):
     def post(self):
 
         #Get Posted data
-
         posted_data= request.get_json()
 
         #We get Credentials and URL 
         username =posted_data['username']
-
         password= posted_data['password']
-
         url=posted_data['url']
 
         # #Verify the Credentials
@@ -123,7 +134,6 @@ class Classify(Resource):
 
         if error:
             return jsonify(ret_json)
-
         # #check if user have tokens
 
         tokens =users.find({
@@ -136,19 +146,34 @@ class Classify(Resource):
             return jsonify (({ "message": "No URL Provided" }), 400)
 
         # #Load Image from URL
-
         response= requests.get(url)
-
         img= Image.open(BytesIO(response.content))
 
         #Preprocess the image for making suitable for InceptionV3 Model
-
         img=img.resize (299, 299)
-
         img_array =img_to_array(img)
-
         img_array= np.expand_dims(img_array, axis=0)
-
         img_array =preprocess_input(img_array)
+
+        #Make Prediction
+        prediction = pretrained_model.predict(img_array) # It can have many number of predictions and conf scores (we need to have top conf predictions)
+        actual_prediction = imagenet_utils.decode_predictions(prediction, top =5)
+
+        #Return a classification response 
+        ret_json = {}
+        for pred in actual_prediction[0]:
+           ret_json[pred[1]] =float(pred[2]*100)
+
+        #Return Tokens
+        users.update_one({
+           "Username":username
+        },
+        {
+           "$set":{
+              "Tokens":tokens-1
+           }
+        })
+           
+        return jsonify(ret_json)
 
         
